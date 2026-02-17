@@ -1,0 +1,165 @@
+version: '3.8'
+
+# ============================================
+# Alice AI Server - Docker Compose
+# ============================================
+# All local AI services in one file
+# Usage: docker compose up -d
+# ============================================
+
+services:
+  # ==========================================
+  # Ollama - Local LLM Server
+  # ==========================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Open WebUI - Chat Interface for Ollama
+  # ==========================================
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    volumes:
+      - open_webui_data:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_AUTH=false
+    depends_on:
+      - ollama
+
+  # ==========================================
+  # Faster-Whisper - Speech to Text
+  # ==========================================
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cuda
+    container_name: whisper
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-large-v3-turbo
+      - WHISPER__DEVICE=cuda
+      - WHISPER__COMPUTE_TYPE=float16
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Piper - Text to Speech
+  # ==========================================
+  piper:
+    image: rhasspy/wyoming-piper:latest
+    container_name: piper
+    restart: unless-stopped
+    ports:
+      - "10200:10200"
+    command: --voice en_US-amy-medium
+    volumes:
+      - piper_data:/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # ComfyUI - Image Generation
+  # ==========================================
+  comfyui:
+    image: yanwk/comfyui-boot:latest
+    container_name: comfyui
+    restart: unless-stopped
+    ports:
+      - "8188:8188"
+    volumes:
+      - comfyui_data:/home/runner
+      - ./comfyui/models:/home/runner/ComfyUI/models
+      - ./comfyui/output:/home/runner/ComfyUI/output
+      - ./comfyui/input:/home/runner/ComfyUI/input
+    environment:
+      - CLI_ARGS=--listen 0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ==========================================
+  # Portainer - Container Management UI
+  # ==========================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  # ==========================================
+  # Tailscale - Secure Remote Access (Optional)
+  # ==========================================
+  # Uncomment if you want Tailscale on the server
+  # tailscale:
+  #   image: tailscale/tailscale:latest
+  #   container_name: tailscale
+  #   restart: unless-stopped
+  #   hostname: ai-server
+  #   environment:
+  #     - TS_AUTHKEY=${TS_AUTHKEY}
+  #     - TS_STATE_DIR=/var/lib/tailscale
+  #   volumes:
+  #     - tailscale_data:/var/lib/tailscale
+  #     - /dev/net/tun:/dev/net/tun
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - SYS_MODULE
+  #   network_mode: host
+
+volumes:
+  ollama_data:
+  open_webui_data:
+  piper_data:
+  comfyui_data:
+  portainer_data:
+  # tailscale_data:
+
+networks:
+  default:
+    name: alice-ai-network

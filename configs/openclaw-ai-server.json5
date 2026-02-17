@@ -1,0 +1,111 @@
+// ============================================
+// OpenClaw Config - AI Server Integration
+// ============================================
+// Copy this to your OpenClaw config and update:
+// - AI_SERVER_IP: Your AI server's IP address
+// - Tokens/keys as needed
+// ============================================
+
+{
+  // Enable HTTP API for voice assistant integration
+  gateway: {
+    http: {
+      endpoints: {
+        chatCompletions: { enabled: true }
+      }
+    }
+  },
+
+  // Enable webhooks for external triggers
+  hooks: {
+    enabled: true,
+    token: "${OPENCLAW_HOOKS_TOKEN}",
+    path: "/hooks"
+  },
+
+  // Model providers
+  providers: {
+    // Cloud (Anthropic) - for complex tasks
+    anthropic: {
+      apiKey: "${ANTHROPIC_API_KEY}"
+    },
+
+    // Local Ollama - for fast/free tasks
+    ollama: {
+      baseUrl: "http://AI_SERVER_IP:11434"  // <-- Replace with your AI server IP
+    }
+  },
+
+  // Agent configuration
+  agents: {
+    main: {
+      // Default model for most tasks
+      model: "anthropic/claude-sonnet-4-20250514",
+      
+      // Model aliases for routing
+      models: {
+        // Smart (cloud) - complex reasoning, coding, long tasks
+        smart: "anthropic/claude-sonnet-4-20250514",
+        
+        // Fast (local) - simple queries, home control, quick answers
+        fast: "ollama/llama3.2:8b",
+        
+        // Local powerful - when you need smarts but want to stay local
+        local: "ollama/qwen2.5:32b",
+        
+        // Vision - for image analysis
+        vision: "ollama/llava:13b",
+        
+        // Code - for coding tasks
+        code: "ollama/qwen2.5-coder:7b"
+      }
+    }
+  },
+
+  // TTS Configuration
+  tts: {
+    // Primary: ElevenLabs (cloud, your voice)
+    provider: "elevenlabs",
+    elevenlabs: {
+      apiKey: "${ELEVENLABS_API_KEY}",
+      voiceId: "21m00Tcm4TlvDq8ikWAM"  // Rachel voice
+    },
+
+    // Fallback: Local Piper (fast, free)
+    // Uncomment to use local TTS instead
+    // provider: "piper",
+    // piper: {
+    //   url: "http://AI_SERVER_IP:10200"
+    // }
+  },
+
+  // STT Configuration (for voice input)
+  stt: {
+    // Local Whisper server
+    provider: "whisper",
+    whisper: {
+      url: "http://AI_SERVER_IP:8080"  // <-- Replace with your AI server IP
+    }
+  }
+}
+
+// ============================================
+// Usage Notes:
+// ============================================
+// 
+// 1. Replace AI_SERVER_IP with your server's IP (e.g., 192.168.1.100)
+// 
+// 2. To use local model for a task, Alice can specify:
+//    - "Use the fast model for this"
+//    - "Run this locally"
+//    - "Use ollama for this"
+//
+// 3. Voice commands flow:
+//    Voice PE → (wake word) → Whisper (local STT) → OpenClaw → Response → ElevenLabs TTS → Speaker
+//
+// 4. For fully local (no cloud):
+//    - Set model: "ollama/qwen2.5:32b"
+//    - Set tts.provider: "piper"
+//    - Only internet needed is for model downloads
+//
+// ============================================
