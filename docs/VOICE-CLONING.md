@@ -1,6 +1,62 @@
 # Voice Cloning
 
-Create a local clone of Alice's voice to replace ElevenLabs.
+Create a local clone of Alice's voice — same voice as ElevenLabs, but faster and free.
+
+## Why Clone Locally?
+
+| | ElevenLabs (Cloud) | Local Clone (XTTS) |
+|---|-------------------|-------------------|
+| Latency | 1-2 seconds | 0.3-0.5 seconds |
+| Cost | $22/month | Free |
+| Quality | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Works offline | ❌ | ✅ |
+
+**The play:** Generate reference audio from ElevenLabs, use it to clone locally with XTTS.
+Same voice, 4x faster, zero ongoing cost.
+
+## Quick Start: Clone Your ElevenLabs Voice
+
+### Step 1: Generate Reference Audio
+
+Run the script to generate voice samples from ElevenLabs:
+
+```powershell
+cd C:\AI-Server
+node scripts/generate-voice-samples.js
+```
+
+This creates ~20 audio samples using your ElevenLabs voice.
+
+### Step 2: Combine into Reference File
+
+```powershell
+cd voice-samples/individual
+
+# Create file list
+(for %i in (*.mp3) do @echo file '%i') > list.txt
+
+# Combine all samples
+ffmpeg -f concat -safe 0 -i list.txt -c copy ../combined.mp3
+
+# Convert to WAV (required format for XTTS)
+ffmpeg -i ../combined.mp3 -ar 22050 ../alice_reference.wav
+```
+
+### Step 3: Use with XTTS
+
+Now `alice_reference.wav` can be used as the voice reference for XTTS.
+
+```bash
+# Test it
+curl -X POST "http://localhost:8020/tts_to_audio/" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello, this is Alice speaking locally!", "speaker_wav": "/app/voices/alice_reference.wav", "language": "en"}' \
+  --output test.wav
+```
+
+**Result:** Same voice, running locally, ~0.3-0.5s instead of 1-2s! 🔥
+
+---
 
 ## Options
 
@@ -131,13 +187,28 @@ python -m piper_train.export_onnx \
 
 ## Getting a Voice Sample
 
-### From ElevenLabs
+### From ElevenLabs (Recommended)
 
-Export your current ElevenLabs voice samples:
+Use the included script to generate samples automatically:
 
-1. Go to ElevenLabs Voice Lab
-2. Download the reference audio files
-3. Use these for cloning
+```powershell
+node scripts/generate-voice-samples.js
+```
+
+This generates ~20 varied sentences covering different tones, lengths, and emotions — perfect for voice cloning.
+
+**What the script does:**
+1. Sends sentences to ElevenLabs API
+2. Downloads MP3 for each
+3. Saves to `voice-samples/individual/`
+
+**Then combine them:**
+```powershell
+# Install ffmpeg if needed: winget install ffmpeg
+cd voice-samples/individual
+(for %i in (*.mp3) do @echo file '%i') > list.txt
+ffmpeg -f concat -safe 0 -i list.txt -ar 22050 ../alice_reference.wav
+```
 
 ### Recording Fresh
 
