@@ -237,17 +237,70 @@ Access Portainer for container management:
 
 Plus: Faster responses, full privacy, no rate limits.
 
+## Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [DEPENDENCIES.md](DEPENDENCIES.md) | Full checklist of requirements |
+| [docs/MODELS.md](docs/MODELS.md) | Which models for which tasks |
+| [docs/DOWNLOADING-MODELS.md](docs/DOWNLOADING-MODELS.md) | How to download all models |
+| [docs/COMFYUI.md](docs/COMFYUI.md) | Image generation setup |
+| [docs/BROWSER-CONTROL.md](docs/BROWSER-CONTROL.md) | Browser automation |
+| [docs/WEB-SERVICES.md](docs/WEB-SERVICES.md) | Hosting dashboards & websites |
+| [docs/VOICE-CLONING.md](docs/VOICE-CLONING.md) | Local voice clone (replace ElevenLabs) |
+| [voice-pe/README.md](voice-pe/README.md) | Voice PE + wake word setup |
+
 ## Roadmap
 
 - [x] Project structure
-- [ ] Setup scripts
-- [ ] Docker Compose config
-- [ ] Voice PE firmware
-- [ ] Wake word training
-- [ ] OpenClaw config templates
+- [x] Setup scripts
+- [x] Docker Compose config
+- [x] OpenClaw config templates
+- [x] Model downloading guides
+- [x] ComfyUI documentation
+- [x] Browser control docs
+- [x] Web services / dashboards docs
+- [x] Voice cloning guide
+- [ ] Voice PE firmware config
+- [ ] Wake word training automation
 - [ ] Home Assistant integration
-- [ ] Voice cloning setup
 - [ ] Monitoring dashboard
+
+## Quick Reference
+
+### Service URLs (after setup)
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Open WebUI | http://ai-server:3000 | Chat with local LLMs |
+| ComfyUI | http://ai-server:8188 | Image generation |
+| Portainer | http://ai-server:9000 | Container management |
+| Ollama API | http://ai-server:11434 | LLM inference |
+| Whisper API | http://ai-server:8080 | Speech-to-text |
+| Piper | http://ai-server:10200 | Text-to-speech |
+| XTTS | http://ai-server:8020 | Voice cloning TTS |
+
+### Useful Commands
+
+```bash
+# Check GPU
+nvidia-smi
+
+# Check containers
+docker compose ps
+
+# View logs
+docker compose logs -f ollama
+
+# Pull a new model
+docker exec ollama ollama pull llama3.2:8b
+
+# Test Ollama
+curl http://localhost:11434/api/generate -d '{"model":"llama3.2:8b","prompt":"hi"}'
+
+# Restart a service
+docker compose restart whisper
+```
 
 ## License
 
