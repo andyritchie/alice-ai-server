@@ -1,0 +1,73 @@
+# ============================================
+# Alice Web Apps - Docker Compose
+# ============================================
+# Add your Node.js web apps here
+# Merge with main docker-compose.yml or run separately
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d
+# ============================================
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Home Dashboard (Alice HQ)
+  # ==========================================
+  home-dash:
+    build: 
+      context: ./apps/home-dash
+      dockerfile: Dockerfile
+    container_name: home-dash
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    volumes:
+      # Persist data (activity logs, settings, etc.)
+      - home_dash_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Work Dashboard (Clone Control Center)
+  # ==========================================
+  work-dash:
+    build:
+      context: ./apps/work-dash
+      dockerfile: Dockerfile
+    container_name: work-dash
+    restart: unless-stopped
+    ports:
+      - "3334:3334"
+    volumes:
+      - work_dash_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3334
+
+  # ==========================================
+  # MRI Viewer (for Mum)
+  # ==========================================
+  mri-viewer:
+    build:
+      context: ./apps/mri-viewer
+      dockerfile: Dockerfile
+    container_name: mri-viewer
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      # Mount the scan images
+      - ./apps/mri-viewer/scans:/app/scans
+    environment:
+      - NODE_ENV=production
+      - PORT=8888
+
+volumes:
+  home_dash_data:
+  work_dash_data:

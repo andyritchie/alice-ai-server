@@ -1,0 +1,28 @@
+# ============================================
+# Generic Node.js App Dockerfile
+# ============================================
+# Copy this to your app folder and rename to "Dockerfile"
+# ============================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files first (better layer caching)
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy everything else
+COPY . .
+
+# Set your app's port here
+EXPOSE 3333
+
+# Health check (optional - update the port)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:3333/health || exit 1
+
+# Start command - update if your entry point is different
+CMD ["node", "server.js"]

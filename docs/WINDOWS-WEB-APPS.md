@@ -10,7 +10,92 @@ How to run your Node.js web apps (dashboards, tools) on the AI server.
 | work-dash | 3334 | github.com/andyritchie/clone-control-center |
 | mri-viewer | 8888 | (local, not on GitHub yet) |
 
-## Option 1: Keep Apps on Main PC (Easiest)
+---
+
+## Option 1: Docker (Recommended) 🐳
+
+Put your apps in Docker alongside the AI services. One command starts everything.
+
+### Step 1: Create apps folder and clone repos
+
+```powershell
+cd C:\AI-Server
+mkdir apps
+cd apps
+
+git clone https://github.com/andyritchie/alicebot.git home-dash
+git clone https://github.com/andyritchie/clone-control-center.git work-dash
+```
+
+### Step 2: Add Dockerfile to each app
+
+Copy this into each app folder as `Dockerfile`:
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3333
+CMD ["node", "server.js"]
+```
+
+(Change the port number for each app)
+
+### Step 3: Add to docker-compose.yml
+
+Add this to your `C:\AI-Server\docker-compose.yml`:
+
+```yaml
+  home-dash:
+    build: ./apps/home-dash
+    container_name: home-dash
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=production
+
+  work-dash:
+    build: ./apps/work-dash
+    container_name: work-dash
+    restart: unless-stopped
+    ports:
+      - "3334:3334"
+    environment:
+      - NODE_ENV=production
+```
+
+### Step 4: Build and run
+
+```powershell
+cd C:\AI-Server
+docker compose build
+docker compose up -d
+```
+
+### Updating apps
+
+```powershell
+cd C:\AI-Server\apps\home-dash
+git pull
+cd C:\AI-Server
+docker compose build home-dash
+docker compose up -d home-dash
+```
+
+### Benefits of Docker
+
+- ✅ One command starts everything: `docker compose up -d`
+- ✅ All services in one place
+- ✅ Easy to backup (just the compose file)
+- ✅ Consistent environment
+- ✅ See all apps in Portainer GUI
+
+---
+
+## Option 2: Keep Apps on Main PC (Easiest)
 
 Honestly? **You might not need to move them.**
 
