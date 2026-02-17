@@ -2,6 +2,15 @@
 
 Local AI infrastructure for the Alice home assistant system.
 
+## 🪟 Windows or Linux?
+
+**Windows is recommended** if you're not comfortable with Linux. All services work on Windows via Docker Desktop.
+
+| Guide | For |
+|-------|-----|
+| [**WINDOWS-SETUP.md**](WINDOWS-SETUP.md) | 👈 **Start here** - GUI-friendly, beginner-friendly |
+| [Setup for Linux](setup.sh) | Advanced users comfortable with terminal |
+
 ## Overview
 
 This repo contains everything needed to set up a local AI server that powers:
